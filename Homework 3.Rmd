@@ -1,0 +1,81 @@
+---
+title: "Homework 3"
+author: "Melissa Yee"
+output: html_document
+date: "2024-10-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1 - IMDb Data Analysis
+
+```{r message=FALSE}
+library(tidyverse)
+library(ggplot2)
+tvseries <- as_tibble(read.csv('Homework3_tvSeries.csv'))
+principals <- as_tibble(read.csv('Homework3_principals.csv'))
+ratings <- as_tibble(read.csv('Homework3_ratings.csv'))
+```
+
+### Question 1: 
+
+```{r }
+tvseries_end <- filter(tvseries,!is.na(tvseries$endYear))
+```
+
+```{r }
+tvseries_end <- mutate(tvseries_end, yearsRan = endYear-startYear)
+ggplot(tvseries_end, aes(x=yearsRan)) +  geom_histogram(binwidth=1, boundary=0, col='black', fill='maroon') + xlab('Years Ran') + ylab('Frequency') + ggtitle("Distribution of Lifespan of TV Series") + theme_classic()
+```
+
+The distribution of TV Series' lifespans is skewed right with a median of `r median(tvseries_end$yearsRan)` years and IQR of `r IQR(tvseries_end$yearsRan)` year.
+
+```{r }
+table(tvseries_end$yearsRan)
+```
+17,929 TV series ended the same year as they started since their lifespans are 0 years. 
+
+
+### Question 2: 
+
+```{r message=FALSE,result="hide"}
+length(unique(tvseries$tconst))==nrow(tvseries)
+length(unique(ratings$tconst))==nrow(ratings)
+```
+
+```{r }
+tvseries_ratings <- inner_join(tvseries, ratings, by ="tconst")
+nrow(tvseries_ratings)/nrow(tvseries)
+```   
+0.358 of TV series have rating information available. 
+
+```{r }
+tvseries_ratings_over9 <- filter(tvseries_ratings,((averageRating>=9)&(numVotes>=20000)))
+sort(tvseries_ratings_over9$primaryTitle)
+```
+This is a list of TV series with a ratings of 9 or higher with at least 20,000 votes sorted alphabetically.
+
+### Question 3: 
+
+```{r }
+principals_birthyear <- filter(principals,!is.na(principals$birthYear))
+principals_birthyear_series <- left_join(principals_birthyear, tvseries, by ="tconst")
+principals_birthyear_series <- mutate(principals_birthyear_series, ageAtStart = startYear - birthYear)
+
+aggregate(ageAtStart~category, data=principals_birthyear_series, FUN=median)
+```
+
+
+The median ages for writers at the start of TV series is the highest at 47 years old. People playing themselves follows writers for median ages at the start of TV series at 44 years old. Then, actors come after with a median age of 41 years old, and lastly, the youngest category of principals is actresses at 35 years old. 
+
+## Part 2 - Project Reflections 
+
+4. I choose the Super Bowl ads dataset because I've always been interested in watching football, and I watch the Super Bowl every year with my family. The context of the data interested me because it included various information ranging from engagement statistics to what the ad featured. I choose like count, patriotic status, and celebrity presence as my predictor variables. Like count I expected to have a strong correlation with view count because both are measures of viewer engagement. I choose patriotic status because I wanted to find out if viewers enjoyed a patriotic appeal in ads, but I didn't think the two variables would have as strong of a correlation. I choose celebrity presence because I wanted to investigate if famous influencers truly make a difference in media engagement, and I assumed these variables would have a fairly strong correlation. 
+
+
+5. One of the challenges I faced was formatting the readability of my graphs. When I graphed my data in a scatterplot or histogram, large outliers would make graphs unreadable, thus I would need to change the x and y bounds. It was frustrating because there was a trade off between capturing all the data and creating a readable graph. Next time, I plan to preview the data and strategize how the data could be best portrayed. I learned that I can be an impatient coder at times, and sometimes I need just to take a break from the work. Getting frustrated only impedes on my productivity, so I will try to digest complex problem more systemically and in parts. 
+
+6. My personal background influenced how I choose my predictor variables. For example, since I am avid on social media, I was more interested in variables such as like count, view count, and comments. Analyzing engagement statistics was fascinating and influenced how I conducted my analysis. Others have diverse interests, thus they would likely pick different predictor variables that seemed more interesting to them. Therefore, their analysis would differ from mine as other variables are being investigated. 
+
